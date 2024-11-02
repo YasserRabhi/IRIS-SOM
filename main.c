@@ -7,44 +7,57 @@
 
 
 //defines
+
 #define MAXVALUE 99999
 #define FILESIZE 150
+#define VECTORSIZE 4
 #define NBC 6
 #define NBL 10
 #define map_size 100
+
+
 //public variables
 struct Vect *v; // Data vector
 struct Net net; // Network structure
 struct Neuron **map; // Neurons map
-double  mean_vect[4]; //Vector of mean values for intialization
+double  mean_vect[VECTORSIZE]; //Vector of mean values for intialization
 char versicolor[] = "versicolor", setosa[] = "setosa", virginica[] = "virginica"; // plant types
 int indices[FILESIZE]; // for the data order
 
 
 //functions
 double max (double x , double y){ if (x>y) return x; else return y;}
+
 double min (double x , double y){ if (x<y) return x; else return y;}
+
 double sqr (double x) {return x*x;}
+
 double randr(double min, double max){ // returns random value between min and max
 
     double range = (max - min);
     double div = RAND_MAX / range;
     return min + (rand() / div);
 }
+
 void print_data_vect(){
-for (int i=0;i<FILESIZE;i++) printf("%d : %f %1lf %1lf %1lf\n",i, v[i].data[0], v[i].data[1] , v[i].data[2], v[i].data[3]);
+	for (int i=0;i<FILESIZE;i++) printf("%d : %f %1lf %1lf %1lf\n",i, v[i].data[0], v[i].data[1] , v[i].data[2], v[i].data[3]);
 }
+
 void print_mean_vect(){
-for (int i=0;i<4;i++)
-    printf("%1lf ", mean_vect[i]);}
+	for (int i=0;i<VECTORSIZE;i++)
+    	printf("%1lf ", mean_vect[i]);
+}
+
 void print_map (){
-for(int x = 0; x < NBC; x++) {
-    for(int y = 0; y < NBL; y++) {
-    printf("\n map[%d][%d]" , map[x][y].posx,map[x][y].posy);
-     for(int i=0; i<4;i++) {
-       printf( "%f ", map[x][y].w[i]);
-      }
-    }}}
+	for(int x = 0; x < NBC; x++) {
+		for(int y = 0; y < NBL; y++) {
+   		 	printf("\n map[%d][%d]" , map[x][y].posx,map[x][y].posy);
+    	 		for(int i=0; i<VECTORSIZE;i++) {
+       				printf( "%f ", map[x][y].w[i]);
+      			}
+    		}
+    	}
+ }
 void print_map_full (){
     for(int x = 0; x < NBC; x++) {
     for(int y = 0; y < NBL; y++) {
@@ -83,6 +96,7 @@ void init_shuffle (int indices[]){ //randomize pick order
 
 void shuffle (int indices[]){
 	    int swap,randomint;
+
 	    for (int i=0;i<FILESIZE;i++){ // swap the values randomly
         randomint= (int) rand()%FILESIZE;
         swap= indices[i];
@@ -98,7 +112,7 @@ void normalize_data (struct Vect* v){ //normalizing vector
     for(int i=0;i<FILESIZE;i++){
         value= sqrt(sqr(v[i].data[0])+sqr(v[i].data[1])+sqr(v[i].data[2])+sqr(v[i].data[3]));
         v[i].norm=value;
-           for(int w=0;w<4;w++)
+           for(int w=0;w<VECTORSIZE;w++)
     v[i].data[w]/=value;
     }
 
@@ -112,7 +126,7 @@ void mean_vector(struct Vect* p){// calculating the mean vector values
         mean_vect[2]+=v[i].data[2];
         mean_vect[3]+=v[i].data[3];
         }
-    for(int i=0;i<4;i++)
+    for(int i=0;i<VECTORSIZE;i++)
             mean_vect[i]/=FILESIZE;
 
 
@@ -137,10 +151,10 @@ void initialize_map(){
 
   for(x = 0; x < NBC; x++) {
     for(y = 0; y < NBL; y++) {
-      map[x][y].w = ( double *) malloc(sizeof(double) * 4);
+      map[x][y].w = ( double *) malloc(sizeof(double) * VECTORSIZE);
       map[x][y].etiq='*';
 
-     for(int i=0; i<4;i++) {
+     for(int i=0; i<VECTORSIZE;i++) {
         map[x][y].w[i] = randr(mean_vect[i]-0.02, mean_vect[i]+0.05 ); // random weight values
 
         }
@@ -150,18 +164,21 @@ void initialize_map(){
   }
 
 }
+
 double distance_euclidienne (struct Vect *vec , struct Neuron* n){ // weight distance between data and neuron
 
     double res =0,diff;
-    for (int i=0;i<4;i++){
+    for (int i=0;i<VECTORSIZE;i++){
         diff=vec->data[i] - n->w[i];
         res+= pow(fabs(diff),2);
     }
     return sqrt(res);
 }
+
 double node_dist(struct Neuron *node1, struct Neuron *node2) {
     return sqrt(pow((node2->posx - node1->posx), 2) + pow((node2->posy - node1->posy), 2));
 }
+
 void openFile_readData (char * nomfichier){  //reads data from file to weight vector
 
     v =(struct Vect*)malloc(FILESIZE * sizeof(struct Vect));      //initialize data vector
@@ -173,8 +190,8 @@ void openFile_readData (char * nomfichier){  //reads data from file to weight ve
     if (fichier != NULL)
 {
 
-      while(fscanf(fichier, "%lf,%lf,%lf,%lf,Iris-%s\n",&sw,&sl,&pw,&pl,&tmp )!=EOF){
-        v[i].data= malloc (4*sizeof(double));
+      while(fscanf(fichier, "%lf,%lf,%lf,%lf,Iris-%s\n",&sw,&sl,&pw,&pl,tmp )!=EOF){
+        v[i].data= malloc (VECTORSIZE*sizeof(double));
         v[i].data[0]=sw; //SW
         v[i].data[1]=sl; //SL
         v[i].data[2]=pw; //PW
@@ -194,137 +211,184 @@ void openFile_readData (char * nomfichier){  //reads data from file to weight ve
     }
     fclose( fichier);
 }
-struct Neuron *trouver_bmu(struct Vect* vec){ //find BMU to vec from map
+
+void add_list ( struct bmuList* bmu_list , struct BMU * bmu){
+	bmu->next=bmu_list->first;
+	bmu_list->nb_elems++;
+	bmu_list->first=bmu;
+}
+
+
+void free_list ( struct bmuList* bmu_list){ // free BMU list
+ 	
+ 	if(bmu_list == NULL) return;
+  	struct BMU * tmp;
+
+	while (bmu_list->first!=NULL){ // while list has elements
+		tmp=bmu_list->first->next;
+		free(bmu_list->first);
+		bmu_list->first=tmp;
+		}
+	
+	free(bmu_list);
+	}
+
+
+void print_list (struct bmuList* bmu_list){
+	printf(" Printing BMU List of %d elems :\n",(bmu_list->nb_elems));
+	if (bmu_list == NULL) {printf(" ERROR BMU LIST NULL POINTER"); return; }
+	struct BMU * bmu_tmp;
+	bmu_tmp=bmu_list->first;
+	for (int i=1;i<=bmu_list->nb_elems;i++){
+		if (bmu_tmp == NULL) { printf(" ERROR BMU NULL POINTER"); return; }
+		printf("%d %d |", bmu_tmp->c , bmu_tmp->l);
+		bmu_tmp=bmu_tmp->next;
+	}
+	printf("\n");
+}
+
+
+
+struct bmuList* find_bmus(struct Vect* vec){ //find BMU to vec from map
+    struct bmuList * bmu_list;
+    bmu_list = (struct bmuList*)(malloc(sizeof(struct bmuList)));
+    struct BMU * bmu;
+    
     double min=MAXVALUE,tmp;
     struct Neuron * res;
 
     for(int x = 0; x < NBC; x++) {
         for(int y = 0; y < NBL; y++) {
         tmp=distance_euclidienne(vec,&map[x][y]);
-        if (tmp < min){
 
-            res= &(map[x][y]);
+        if (tmp <= min){ // if bmu is better
+        	bmu = (struct BMU*)(malloc(sizeof(struct BMU)));   // save location in BMU 
+        	bmu->c=x;
+        	bmu->l=y;
+
+		if(tmp==min){ // if another equal BMU add to BMU list 
+
+		add_list(bmu_list,bmu);
+		}
+		else{ // if BMU is superior
+		//free_list(bmu_list);
+		bmu_list = (struct bmuList*)(malloc(sizeof(struct bmuList))); // create new BMU list with BMU
+		bmu_list->first=bmu;
+		bmu_list->nb_elems=1;;
+		}
             min=tmp;
             }
         }
 
         }
 
-    return res;
+    return bmu_list;
+}
+
+struct BMU* pick_bmu ( struct bmuList * bmu_list){
+	
+	if (bmu_list == NULL) {fprintf(stderr," ERROR BMU LIST NULL POINTER"); return NULL; }
+	struct BMU * bmu=bmu_list->first;
+	if (bmu_list->nb_elems==1) // if bmuList has 1 BMU then send it
+		return bmu_list->first;
+
+
+	int rand_bmu =(int) rand() % (bmu_list->nb_elems+ 1); // randomly choose bmu 
+
+	for(int i=0;i<rand_bmu && (bmu->next!=NULL);i++)
+		bmu=bmu->next;
+
+	if (bmu == NULL) {fprintf(stderr," ERROR BMU PICK NULL POINTER"); return NULL; }
+	return bmu;
+	
 }
 double alpha (int t ){ return net.alpha*(1-(t/net.nb_it));} //calculate alpha value for iteration t
 
-void cycle_apprentissage (struct bmuList * bmu_list , int iteration){
-        //if(iteration==net.nb_it) return;
+void learning_cycle (int iteration){
 
-    shuffle(indices);
+    init_shuffle(indices);
 
-
-    struct BMU * bmus = (struct BMU*)(malloc(sizeof(struct BMU)));// create BMU structure
+    struct bmuList * bmu_list; // create BMU structure
+    struct BMU * bmu; 
     struct Neuron * best;
     //finding bmu
     for (int i=0;i<FILESIZE;i++){ //for each data vector
 
-    struct BMU * current_bmu = (struct BMU*)(malloc(sizeof(struct BMU))); 
 
-        best=trouver_bmu(&v[indices[i]]); //find BMU
-        best->etiq=v[indices[i]].id; //Change flower type
-        current_bmu->c=best->posx;  // save location in BMU list
-        current_bmu->l=best->posy;
+     bmu_list=find_bmus(&v[indices[i]]); //find BMU list for node
 
-        current_bmu->next=bmu_list->first; //add current BMU to list
-        bmu_list->first=current_bmu;
-        bmu_list->nb_elems++;
-
-        // changing the BMU's weight
-
-        for(int x=0;x<4;x++)
-        best->w[x] = best->w[x] + alpha(iteration) * v[indices[i]].data[x] - (best->w[x]) ;
-
-
-        //
-
-      //changing weights in the BMU's neighborhood 
+     bmu=pick_bmu(bmu_list); // randomly pick a BMU out of the list
+           
+     best=&(map[bmu->c][bmu->l]); // find the BMU node
+        
+     best->etiq=v[indices[i]].id; //Change flower type
+       
+      //changing the BMU's weight and changing weights in the BMU's neighborhood 
         for (int x = 0; x < NBC; x++) {
             for (int y = 0; y < NBL; y++) {
                 if (node_dist(best, &(map[x][y])) <= net.nbd_size) {
-                    for (int w = 0; w < 4; w++) {
+                    for (int w = 0; w < VECTORSIZE; w++) {
                         map[x][y].w[w] += alpha(iteration) * (v[indices[i]].data[w] - map[x][y].w[w]);
                     }
                 }
             }
         }
-}
-	free(bmus);
+       //free_list(bmu_list);
 
+     }
 }
 
-void learning (int epochs,int steps){
-  struct BMU * bmu;
-    struct bmuList * bmu_list;
+void learning (int steps){
+
     double nbd = node_dist(&(map[0][0]), &(map[NBC-1][NBL-1])) / 2 + 1; //calculate the distance between the two ends of the map
-
-    bmu_list = (struct bmuList*)(malloc(sizeof(struct bmuList)));
-    bmu_list->nb_elems=0;
-
-    bmu = (struct BMU*)(malloc(sizeof(struct BMU)));
-
-    initialize_net (bmu,epochs ,0.9,nbd);
-
-
-    for (int iter_counter=0; iter_counter<=net.nb_it ;iter_counter++){
-        cycle_apprentissage(bmu_list,iter_counter);
-    if (iter_counter==net.nb_it/4) net.nbd_size=1; // first 1/4 with max neighborhood and rest 3/4 with adjacent neighborhood
-     if (iter_counter % (net.nb_it/steps) ==0){ // print
-     // printf("Epoch: %d Neighborhood size: %d \n",iter_counter,net.nbd_size);
-      printf("Epoch %d : \n",iter_counter);
-      
-      print_map_full ();
-      }
-      
-    
+    for (int iter_counter=1; iter_counter<=net.nb_it ;iter_counter++){
+        learning_cycle(iter_counter);
+    	if (iter_counter==net.nb_it/4) net.nbd_size=1; // first 1/4 with max neighborhood and rest 3/4 with adjacent neighborhood
+     	if (iter_counter % (net.nb_it/steps) ==0 && iter_counter !=0){ // print
+      	printf("Epoch %d : \n",iter_counter);
+      	print_map_full ();
+      	}
     }
-
-       }
-
-
+}
 
 
 
 int main (int argc, char **argv){
 
-  double time_spent = 0.0;
- 
-    clock_t begin = clock();
+	double time_spent = 0.0; //set up timer for exection 
+	srand(time(0));
+	clock_t begin = clock();
 
-	if(argc != 3 )  {
-    fprintf(stderr, "USAGE : '' ./iris Epochs Steps[1..epochs]'' \n ");
-    exit(1);
-}
+	if(argc != 3 )  { fprintf(stderr, "USAGE : '' ./iris Epochs Steps[1..epochs]'' \n "); exit(1);}
 
-    int  epochs = atoi(argv[1]); 
-    int  steps = atoi(argv[2]);       
-    char *nomfichier="iris.data";
-
-    openFile_readData(nomfichier);
-
-    init_shuffle(indices);
-
-    normalize_data(v);
-
-    mean_vector(v);
+	int  epochs = atoi(argv[1]); 
+	int  steps = atoi(argv[2]);  
+	epochs=max(epochs,1); // avoid negative epoch value
+	steps=max(steps,1); // avoid devision by 0 and negative numbers     
+	char *nomfichier="iris.data";
 
 
-    initialize_map();
+	openFile_readData(nomfichier);
 
+	init_shuffle(indices);
 
-    learning(epochs,steps);
+	normalize_data(v);
 
-    clock_t end = clock();
-    
-    time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
- 
-    printf("The elapsed time is %f seconds \n", time_spent);
+	mean_vector(v);
+
+	initialize_map();
+
+	struct BMU * bmu; bmu = (struct BMU*)(malloc(sizeof(struct BMU)));
+
+	initialize_net (bmu,epochs ,0.9,6);
+	
+	learning(steps);
+
+	clock_t end = clock();
+	    
+	time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+	 
+	printf("The elapsed time is %f seconds \n", time_spent);
 
 
      return 0;}
